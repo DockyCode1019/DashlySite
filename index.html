@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashly | Live Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .news-item:not(:last-child) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .online-dot {
+            animation: pulse-green 2s infinite;
+        }
+        .lang-btn {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .lang-btn.active {
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <header class="flex flex-wrap justify-between items-start mb-8 px-4 gap-4">
+            <div>
+                <h1 class="text-4xl font-black tracking-tighter text-gradient">Dashly</h1>
+                <p class="text-slate-400 text-sm italic" id="welcome-msg">...</p>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Language Toggle -->
+                <div class="glass p-1 flex gap-1">
+                    <button id="lang-hu" onclick="changeLang('hu')" class="lang-btn px-3 py-1 text-[10px] font-bold rounded-lg border border-transparent active">HU</button>
+                    <button id="lang-en" onclick="changeLang('en')" class="lang-btn px-3 py-1 text-[10px] font-bold rounded-lg border border-transparent">EN</button>
+                </div>
+
+                <div id="weather-widget" class="glass px-6 py-3 flex items-center gap-4">
+                    <div id="weather-icon" class="text-4xl">☀️</div>
+                    <div class="border-l border-white/10 pl-4 text-right">
+                        <div class="text-2xl font-bold leading-tight" id="temp">-- °C</div>
+                        <div class="text-[10px] text-slate-400 uppercase tracking-widest" id="location-name">Local</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Column 1: Time & Nameday -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass p-6 text-center">
+                    <div id="clock" class="text-5xl font-light mb-1 font-mono">00:00:00</div>
+                    <div id="date" class="text-indigo-400 font-medium text-xs mb-4 uppercase tracking-widest">...</div>
+                    <div class="pt-4 border-t border-white/10">
+                        <p class="text-[10px] text-slate-500 uppercase mb-1" id="label-nameday">Mai névnap</p>
+                        <p id="nameday" class="text-lg font-semibold text-slate-200 tracking-tight">---</p>
+                    </div>
+                </div>
+
+                <div class="glass p-5">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 italic" id="label-astro">Égi adatok</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm" id="label-sunrise">🌅 Napkelte</span>
+                            <span id="sunrise" class="font-mono text-indigo-300">--:--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm" id="label-sunset">🌇 Napnyugta</span>
+                            <span id="sunset" class="font-mono text-indigo-300">--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2-3: News -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass p-6 min-h-[500px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold" id="label-news">Friss Hírek</h2>
+                        <div class="status-badge" id="news-status">LIVE</div>
+                    </div>
+                    <div id="news-container" class="space-y-1">
+                        <!-- Instant Skeleton -->
+                        <div class="space-y-4">
+                            <div class="h-4 bg-white/5 rounded w-3/4 animate-pulse"></div>
+                            <div class="h-4 bg-white/5 rounded w-1/2 animate-pulse"></div>
+                            <div class="h-4 bg-white/5 rounded w-2/3 animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 4: Finance -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass p-6">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4" id="label-finance">Pénzügyi Adatok</h3>
+                    <div class="space-y-4" id="finance-list">
+                        <div class="h-12 bg-white/5 rounded-xl animate-pulse"></div>
+                        <div class="h-12 bg-white/5 rounded-xl animate-pulse"></div>
+                    </div>
+                </div>
+
+                <div class="glass p-5">
+                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3" id="label-status-title">Rendszer</h3>
+                     <div class="flex items-center gap-3">
+                         <div id="status-dot" class="h-2 w-2 rounded-full bg-green-500 online-dot"></div>
+                         <span id="status-text" class="text-xs">Online</span>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bővített névnap adatbázis az azonnali betöltéshez
+        const NAMEDAYS = {
+            "01-01": "Alpár", "01-02": "Ábel", "02-14": "Bálint", "03-15": "Kristóf", 
+            "04-18": "Andrea, Ilma", "04-19": "Emma", "04-20": "Tivadar", "04-21": "Konrád", 
+            "04-22": "Csilla, Noémi", "05-01": "Fülöp, Jakab", "08-20": "István", "12-24": "Ádám, Éva"
+        };
+
+        let currentLang = 'hu';
+
+        const i18n = {
+            hu: {
+                welcome_morning: "Szép reggelt!", welcome_day: "Szia! Kellemes napot!", welcome_evening: "Jó estét!",
+                sync: "Élő adatok.", nameday_label: "Mai névnap", astro_label: "Égi adatok",
+                sunrise: "🌅 Napkelte", sunset: "🌇 Napnyugta", news: "Friss Hírek",
+                finance: "Pénzügyi Adatok", system: "Rendszer", online: "Minden üzemkész",
+                offline: "Offline mód", currency: "Ft"
+            },
+            en: {
+                welcome_morning: "Good Morning!", welcome_day: "Hi! Have a great day!", welcome_evening: "Good Evening!",
+                sync: "Live data.", nameday_label: "Today's Name Day", astro_label: "Celestial",
+                sunrise: "🌅 Sunrise", sunset: "🌇 Sunset", news: "Latest News",
+                finance: "Financials", system: "System", online: "Operational",
+                offline: "Offline", currency: "HUF"
+            }
+        };
+
+        function updateClock() {
+            const now = new Date();
+            const locale = currentLang === 'hu' ? 'hu-HU' : 'en-US';
+            document.getElementById('clock').textContent = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            document.getElementById('date').textContent = now.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+            
+            const hour = now.getHours();
+            const t = i18n[currentLang];
+            let msg = t.sync;
+            if(hour < 10) msg = t.welcome_morning;
+            else if(hour < 18) msg = t.welcome_day;
+            else msg = t.welcome_evening;
+            document.getElementById('welcome-msg').textContent = msg;
+        }
+
+        function changeLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`lang-${lang}`).classList.add('active');
+            updateUI();
+            fetchNews(); // Nyelvfüggő hírek frissítése
+            fetchFinance(); // Valutaformátum frissítése
+        }
+
+        function updateUI() {
+            const t = i18n[currentLang];
+            document.getElementById('label-nameday').textContent = t.nameday_label;
+            document.getElementById('label-astro').textContent = t.astro_label;
+            document.getElementById('label-sunrise').textContent = t.sunrise;
+            document.getElementById('label-sunset').textContent = t.sunset;
+            document.getElementById('label-news').textContent = t.news;
+            document.getElementById('label-finance').textContent = t.finance;
+            document.getElementById('label-status-title').textContent = t.system;
+            document.getElementById('status-text').textContent = t.online;
+            updateClock();
+        }
+
+        // AZONNALI ADATLEKÉRÉS PÁRHUZAMOSAN
+        function initData() {
+            // Névnap azonnal a lokális adatbázisból
+            const now = new Date();
+            const key = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            document.getElementById('nameday').textContent = NAMEDAYS[key] || "---";
+
+            // Geolocation indítása
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(fetchWeather);
+            }
+
+            // Párhuzamos hívások
+            fetchFinance();
+            fetchNews();
+            
+            // Próbáljuk meg az online névnapot is frissíteni ha lehet
+            fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://nevnap-api.vercel.app/api/today'))
+                .then(r => r.json()).then(j => {
+                    const d = JSON.parse(j.contents);
+                    if(d && d[0]) document.getElementById('nameday').textContent = d[0].nevnap;
+                }).catch(() => {});
+        }
+
+        async function fetchWeather(pos) {
+            const { latitude: lat, longitude: lon } = pos.coords;
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=sunrise,sunset&timezone=auto`);
+                const data = await res.json();
+                document.getElementById('temp').textContent = `${Math.round(data.current_weather.temperature)} °C`;
+                document.getElementById('sunrise').textContent = data.daily.sunrise[0].split('T')[1];
+                document.getElementById('sunset').textContent = data.daily.sunset[0].split('T')[1];
+                
+                // Helyszín név lekérése
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                    .then(r => r.json()).then(g => {
+                        document.getElementById('location-name').textContent = g.address.city || g.address.town || "Local";
+                    });
+            } catch (e) {}
+        }
+
+        async function fetchFinance() {
+            const container = document.getElementById('finance-list');
+            try {
+                const [fx, cry] = await Promise.all([
+                    fetch('https://open.er-api.com/v6/latest/EUR'),
+                    fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')
+                ]);
+                const fData = await fx.json();
+                const cData = await cry.json();
+                const unit = i18n[currentLang].currency;
+                
+                container.innerHTML = `
+                    <div class="p-3 bg-white/5 rounded-xl flex justify-between items-center">
+                        <div><span class="block text-[10px] text-slate-400">EUR</span><span class="font-bold">${fData.rates.HUF.toFixed(1)} ${unit}</span></div>
+                    </div>
+                    <div class="p-3 bg-white/5 rounded-xl flex justify-between items-center">
+                        <div><span class="block text-[10px] text-slate-400">USD</span><span class="font-bold">${(fData.rates.HUF/fData.rates.USD).toFixed(1)} ${unit}</span></div>
+                    </div>
+                    <div class="p-3 bg-indigo-500/10 rounded-xl flex justify-between items-center">
+                        <div><span class="block text-[10px] text-indigo-300">BTC</span><span class="font-bold">$${cData.bitcoin.usd.toLocaleString()}</span></div>
+                    </div>
+                `;
+            } catch (e) {}
+        }
+
+        async function fetchNews() {
+            const container = document.getElementById('news-container');
+            const rss = currentLang === 'hu' ? 'https://telex.hu/rss' : 'https://feeds.bbci.co.uk/news/rss.xml';
+            try {
+                const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rss)}`);
+                const data = await res.json();
+                if(data.status === 'ok') {
+                    container.innerHTML = data.items.slice(0, 7).map(item => `
+                        <div class="news-item py-3">
+                            <a href="${item.link}" target="_blank" class="block hover:text-indigo-400 transition-colors">
+                                <h4 class="text-sm font-medium leading-tight">${item.title}</h4>
+                                <span class="text-[10px] text-slate-500">${new Date(item.pubDate).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            </a>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { container.innerHTML = 'Error loading news.'; }
+        }
+
+        // Események
+        window.onload = () => {
+            updateUI();
+            initData();
+            setInterval(updateClock, 1000);
+            setInterval(initData, 600000); // 10 perc
+        };
+    </script>
+</body>
+</html>
